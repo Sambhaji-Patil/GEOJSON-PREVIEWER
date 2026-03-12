@@ -399,9 +399,9 @@ def main():
     # ── Header ────────────────────────────────────────────────────────────
     st.markdown("""
     <div class="app-header">
-        <h1 class="app-title">GeoJSON Comparison Visualizer</h1>
+        <h1 class="app-title">GeoJSON Comparison — Dual Timeline</h1>
     </div>
-    <p class="app-subtitle">Compare geopolitical boundaries across three independent datasets with separate timeline controls</p>
+    <p class="app-subtitle">Use the small control window titled GeoJSON Comparison — Dual Timeline to change years independently for each dataset A, B, and C.</p>
     <div class="dataset-badges">
         <span class="badge badge-a"><span class="badge-dot" style="background:#e63946"></span>Dataset A — INDIAN_final</span>
         <span class="badge badge-b"><span class="badge-dot" style="background:#457b9d"></span>Dataset B — Geojson_FolderB_named</span>
@@ -436,22 +436,59 @@ def main():
             st.session_state.tl_c    = build_timeline(st.session_state.index_c)
             st.session_state.loaded  = True
 
-    # ── Controls card ─────────────────────────────────────────────────────
-    st.markdown('<div class="controls-card"><p class="controls-title">Timeline Controls</p>', unsafe_allow_html=True)
-
-    col_a, col_b, col_c = st.columns(3)
-
-    datasets = [
-        (col_a, 'index_a', 'tl_a', 'pos_a', 'slider_a', LABEL_A, '#e63946', PALETTE_A),
-        (col_b, 'index_b', 'tl_b', 'pos_b', 'slider_b', LABEL_B, '#457b9d', PALETTE_B),
-        (col_c, 'index_c', 'tl_c', 'pos_c', 'slider_c', LABEL_C, '#2d6a4f', PALETTE_C),
+    # ── Get current state ─────────────────────────────────────────────────
+    datasets_info = [
+        ('index_a', 'tl_a', 'pos_a', LABEL_A, '#e63946', PALETTE_A),
+        ('index_b', 'tl_b', 'pos_b', LABEL_B, '#457b9d', PALETTE_B),
+        ('index_c', 'tl_c', 'pos_c', LABEL_C, '#2d6a4f', PALETTE_C),
     ]
 
     active_results = {}
 
-    for col, idx_key, tl_key, pos_key, slider_key, label, color, palette in datasets:
+    for idx_key, tl_key, pos_key, label, color, palette in datasets_info:
+        tl = st.session_state[tl_key]
+        pos = st.session_state[pos_key]
+        if tl and 0 <= pos < len(tl):
+            year = tl[pos]
+            active = active_at(st.session_state[idx_key], year)
+        else:
+            year = 0
+            active = []
+        active_results[label] = (year, active, palette, color, len(tl))
+
+    # ── Preview Row: 3 Map Cards ──────────────────────────────────────────
+    st.markdown('<p class="map-section-title">Map Preview</p>', unsafe_allow_html=True)
+
+    preview_col1, preview_col2, preview_col3 = st.columns(3, gap="medium")
+
+    year_a, active_a, pal_a, col_a_color, total_a = active_results[LABEL_A]
+    year_b, active_b, pal_b, col_b_color, total_b = active_results[LABEL_B]
+    year_c, active_c, pal_c, col_c_color, total_c = active_results[LABEL_C]
+
+    with preview_col1:
+        render_map_card(LABEL_A, col_a_color, year_label(year_a), active_a, pal_a)
+
+    with preview_col2:
+        render_map_card(LABEL_B, col_b_color, year_label(year_b), active_b, pal_b)
+
+    with preview_col3:
+        render_map_card(LABEL_C, col_c_color, year_label(year_c), active_c, pal_c)
+
+    # ── Controller Card ───────────────────────────────────────────────────
+    st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
+    st.markdown('<div class="controls-card"><p class="controls-title">Timeline Controller</p>', unsafe_allow_html=True)
+
+    # Three columns for dataset controls
+    ctrl_col1, ctrl_col2, ctrl_col3 = st.columns(3, gap="medium")
+
+    datasets_controls = [
+        (ctrl_col1, 'index_a', 'tl_a', 'pos_a', LABEL_A, '#e63946'),
+        (ctrl_col2, 'index_b', 'tl_b', 'pos_b', LABEL_B, '#457b9d'),
+        (ctrl_col3, 'index_c', 'tl_c', 'pos_c', LABEL_C, '#2d6a4f'),
+    ]
+
+    for col, idx_key, tl_key, pos_key, label, color in datasets_controls:
         with col:
-            tl = st.session_state[tl_key]
             st.markdown(f"""
             <div class="dataset-header">
                 <div class="dataset-stripe" style="background:{color}"></div>
@@ -459,49 +496,35 @@ def main():
             </div>
             """, unsafe_allow_html=True)
 
-            if tl:
-                pos = st.slider(
-                    "pos", 0, len(tl) - 1,
-                    st.session_state[pos_key],
-                    key=slider_key,
-                    label_visibility="collapsed"
-                )
-                st.session_state[pos_key] = pos
-                year = tl[pos]
-                active = active_at(st.session_state[idx_key], year)
-                active_results[label] = (year, active, palette, color)
+            tl = st.session_state[tl_key]
 
+            if tl:
+                pos = st.session_state[pos_key]
+                year = tl[pos] if pos < len(tl) else tl[0]
+
+                # Progress indicator
                 st.markdown(f"""
                 <div class="year-display">
-                    <span class="year-value">{year_label(year)}</span>
-                    <span class="empire-count"><span>{len(active)}</span> empire{'s' if len(active) != 1 else ''} · {len(st.session_state[idx_key])} total</span>
+                    <span class="year-value">Step {pos + 1}/{len(tl)}</span>
+                    <span class="empire-count">{len(active_at(st.session_state[idx_key], year))} active</span>
                 </div>
                 """, unsafe_allow_html=True)
+
+                # Navigation buttons
+                btn_col1, btn_col2 = st.columns(2, gap="small")
+                with btn_col1:
+                    if st.button("◀ Prev", key=f"prev_{pos_key}", use_container_width=True):
+                        st.session_state[pos_key] = max(0, pos - 1)
+                        st.rerun()
+
+                with btn_col2:
+                    if st.button("Next ▶", key=f"next_{pos_key}", use_container_width=True):
+                        st.session_state[pos_key] = min(len(tl) - 1, pos + 1)
+                        st.rerun()
             else:
                 st.markdown('<p style="color:#6b7280;font-size:0.82rem;">No data loaded</p>', unsafe_allow_html=True)
-                active_results[label] = (0, [], palette, color)
 
     st.markdown('</div>', unsafe_allow_html=True)
-
-    # ── Maps ──────────────────────────────────────────────────────────────
-    st.markdown('<p class="map-section-title">Map Views</p>', unsafe_allow_html=True)
-
-    # Row 1: Dataset A and B
-    map_col1, map_col2 = st.columns(2)
-
-    year_a, active_a, pal_a, col_a_color = active_results.get(LABEL_A, (0, [], PALETTE_A, '#e63946'))
-    year_b, active_b, pal_b, col_b_color = active_results.get(LABEL_B, (0, [], PALETTE_B, '#457b9d'))
-    year_c, active_c, pal_c, col_c_color = active_results.get(LABEL_C, (0, [], PALETTE_C, '#2d6a4f'))
-
-    with map_col1:
-        render_map_card(LABEL_A, col_a_color, year_label(year_a), active_a, pal_a)
-
-    with map_col2:
-        render_map_card(LABEL_B, col_b_color, year_label(year_b), active_b, pal_b)
-
-    # Row 2: Dataset C — full width
-    st.markdown("<div style='height:1rem'></div>", unsafe_allow_html=True)
-    render_map_card(LABEL_C, col_c_color, year_label(year_c), active_c, pal_c)
 
 
 if __name__ == '__main__':
