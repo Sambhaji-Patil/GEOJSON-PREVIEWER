@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Streamlit Comparison Visualizer for MongoDB GeoJSON Data
-Clean, minimal interface with proper map rendering
+Clean, light-themed interface with proper map rendering and borders
 """
 
 import streamlit as st
@@ -44,221 +44,122 @@ st.set_page_config(
 # ── Global CSS ─────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-    /* Import clean font */
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
-    /* Root variables */
-    :root {
-        --bg: #0f1117;
-        --surface: #1a1d27;
-        --border: #2a2d3e;
-        --text-primary: #e8eaf0;
-        --text-muted: #6b7280;
-        --accent-a: #e63946;
-        --accent-b: #457b9d;
-        --accent-c: #2d6a4f;
-    }
-
-    /* Global reset */
     html, body, [class*="css"] {
         font-family: 'IBM Plex Sans', sans-serif;
-    }
-
-    /* App background */
-    .stApp {
-        background: #0f1117;
-    }
-
-    /* Main container */
-    .main .block-container {
-        padding: 1.5rem 2rem 2rem 2rem;
-        max-width: 100%;
-    }
-
-    /* Hide default Streamlit header decorations */
-    #MainMenu, footer, header { visibility: hidden; }
-
-    /* ── Title area ── */
-    .app-header {
-        display: flex;
-        align-items: baseline;
-        gap: 0.75rem;
-        margin-bottom: 0.25rem;
-    }
-    .app-title {
-        font-size: 1.6rem;
-        font-weight: 600;
-        color: #e8eaf0;
-        letter-spacing: -0.02em;
-        margin: 0;
-    }
-    .app-subtitle {
-        font-size: 0.82rem;
-        color: #6b7280;
-        font-weight: 400;
-        margin: 0 0 1.5rem 0;
-    }
-
-    /* ── Dataset badge pills ── */
-    .dataset-badges {
-        display: flex;
-        gap: 0.5rem;
-        margin-bottom: 1.5rem;
-        flex-wrap: wrap;
-    }
-    .badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        padding: 0.3rem 0.7rem;
-        border-radius: 4px;
-        font-size: 0.78rem;
-        font-weight: 500;
-        font-family: 'IBM Plex Mono', monospace;
-        border: 1px solid;
-    }
-    .badge-dot { width: 7px; height: 7px; border-radius: 50%; }
-    .badge-a { color: #e63946; border-color: #e6394430; background: #e6394410; }
-    .badge-b { color: #457b9d; border-color: #457b9d30; background: #457b9d10; }
-    .badge-c { color: #2d6a4f;  border-color: #2d6a4f30;  background: #2d6a4f10; }
-
-    /* ── Controls card ── */
-    .controls-card {
-        background: #1a1d27;
-        border: 1px solid #2a2d3e;
-        border-radius: 8px;
-        padding: 1.25rem 1.5rem;
-        margin-bottom: 1.5rem;
-    }
-    .controls-title {
-        font-size: 0.72rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: #6b7280;
-        margin: 0 0 1rem 0;
-    }
-
-    /* ── Dataset column headers ── */
-    .dataset-header {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 0.75rem;
-    }
-    .dataset-stripe {
-        width: 3px;
-        height: 18px;
-        border-radius: 2px;
-    }
-    .dataset-name {
-        font-size: 0.82rem;
-        font-weight: 600;
-        color: #c8ccd8;
-        font-family: 'IBM Plex Mono', monospace;
-    }
-
-    /* ── Year display ── */
-    .year-display {
-        background: #0f1117;
-        border: 1px solid #2a2d3e;
-        border-radius: 6px;
-        padding: 0.5rem 0.75rem;
-        margin-bottom: 0.6rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .year-value {
-        font-family: 'IBM Plex Mono', monospace;
-        font-size: 0.95rem;
-        font-weight: 500;
-        color: #e8eaf0;
-    }
-    .empire-count {
-        font-size: 0.72rem;
-        color: #6b7280;
-    }
-    .empire-count span {
-        font-weight: 600;
-        color: #9ca3b8;
-    }
-
-    /* ── Slider overrides ── */
-    .stSlider > div > div > div > div {
-        background: #2a2d3e !important;
-    }
-    .stSlider [data-baseweb="slider"] {
-        margin-top: 0 !important;
-    }
-
-    /* ── Map section ── */
-    .map-section-title {
-        font-size: 0.72rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: #6b7280;
-        margin: 0 0 1rem 0;
-    }
-
-    /* ── Map card wrapper ── */
-    .map-card {
-        background: #1a1d27;
-        border: 1px solid #2a2d3e;
-        border-radius: 8px;
         overflow: hidden;
     }
-    .map-card-header {
-        padding: 0.75rem 1rem;
-        border-bottom: 1px solid #2a2d3e;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    .map-card-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-    }
-    .map-card-label {
-        font-size: 0.78rem;
-        font-weight: 600;
-        font-family: 'IBM Plex Mono', monospace;
-        color: #9ca3b8;
-    }
-    .map-card-year {
-        margin-left: auto;
-        font-size: 0.72rem;
-        font-family: 'IBM Plex Mono', monospace;
-        color: #6b7280;
-    }
-    .map-card-body {
-        padding: 0.75rem;
+
+    /* Light Theme Main Background */
+    .stApp {
+        background: #f4f6f8;
     }
 
-    /* ── Empty state ── */
+    /* 1. Distribute empty space: Frame the entire app nicely */
+    .main .block-container {
+        padding: 1.5rem 2.5rem !important; 
+        max-width: 100% !important;
+        height: 100vh;
+    }
+
+    #MainMenu, footer, header { visibility: hidden; }
+
+    /* 2. Map card header styling */
+    .map-card-header {
+        background: #f9fafb;
+        padding: 12px 18px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .map-card-dataset {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+    }
+    .map-card-year {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 1.15rem;
+        font-weight: 700;
+    }
+    .map-card-sub {
+        font-size: 0.7rem;
+        color: #6b7280;
+        margin-top: 4px;
+    }
+
+    /* 3. Controller Panel Typography */
+    .ctrl-title {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 0.85rem;
+        color: #4b5563;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 24px;
+        border-bottom: 1px solid #e5e7eb;
+        padding-bottom: 12px;
+    }
+    .ctrl-dataset-label {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 0.9rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+    .ctrl-step {
+        font-size: 0.75rem;
+        color: #6b7280;
+        margin-bottom: 12px;
+    }
+
+    /* Clean up Streamlit buttons for Light Theme */
+    .stButton > button {
+        border-radius: 6px !important;
+        font-family: 'IBM Plex Mono', monospace !important;
+        font-size: 0.8rem !important;
+        padding: 4px 12px !important;
+        height: 38px !important;
+        background-color: #ffffff !important;
+        border: 1px solid #d1d5db !important;
+        color: #374151 !important;
+        transition: all 0.2s ease;
+    }
+    .stButton > button:hover {
+        border-color: #9ca3af !important;
+        background-color: #f3f4f6 !important;
+        color: #111827 !important;
+    }
+
+    /* Empty state styling */
     .empty-state {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        height: 300px;
-        color: #4b5563;
-        gap: 0.5rem;
-    }
-    .empty-state-icon { font-size: 2rem; }
-    .empty-state-text { font-size: 0.82rem; }
-
-    /* ── Streamlit metrics cleanup ── */
-    [data-testid="metric-container"] {
-        background: transparent !important;
-        border: none !important;
-        padding: 0 !important;
+        color: #9ca3af;
+        gap: 0.4rem;
+        height: 100%;
     }
 
-    /* Divider */
-    hr { border-color: #2a2d3e !important; margin: 1.25rem 0 !important; }
+    /* 4. The main structural fix: clear borders, background, and rounded corners for each box */
+    [data-testid="column"] > div {
+        background: #ffffff;
+        border: 1px solid #e5e7eb; /* Soft light gray border */
+        border-radius: 10px; 
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04); /* Much softer shadow for light theme */
+        height: 100%;
+        overflow: hidden; 
+    }
+
+    /* 5. Add inner padding exclusively to the 4th box (Control Panel) */
+    div[data-testid="stHorizontalBlock"]:last-of-type > [data-testid="column"]:last-of-type > div {
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -369,26 +270,24 @@ def build_map(files: List[Dict], palette: List[str]) -> folium.Map:
     return m
 
 
-def render_map_card(label: str, color: str, year_str: str, active: List[Dict], palette: List[str]):
-    """Render a single map card with header and folium map."""
+def render_map_card(dataset_label: str, color: str, year_str: str, step: int, total_steps: int, empire_count: int, active: List[Dict], palette: List[str], map_height: int):
+    """Render a single map panel with compact header."""
+    # Changed the year text color from light gray to dark slate (#111827) for the light theme
     st.markdown(f"""
-    <div class="map-card">
-        <div class="map-card-header">
-            <div class="map-card-dot" style="background:{color}"></div>
-            <span class="map-card-label">{label}</span>
-            <span class="map-card-year">{year_str} · {len(active)} empire{'s' if len(active) != 1 else ''}</span>
-        </div>
+    <div class="map-card-header">
+        <div class="map-card-dataset" style="color:{color}">Dataset {dataset_label} &nbsp; <span style="color:#111827;font-size:1.15rem;">{year_str}</span></div>
+        <div class="map-card-sub">Step {step}/{total_steps} &nbsp;·&nbsp; {empire_count} empire{'s' if empire_count != 1 else ''}</div>
     </div>
     """, unsafe_allow_html=True)
 
     if active:
         m = build_map(active, palette)
-        st_folium(m, use_container_width=True, height=480, returned_objects=[])
+        st_folium(m, use_container_width=True, height=map_height, returned_objects=[])
     else:
-        st.markdown("""
-        <div class="empty-state">
-            <div class="empty-state-icon">◌</div>
-            <div class="empty-state-text">No active empires at this year</div>
+        st.markdown(f"""
+        <div class="empty-state" style="height:{map_height}px;">
+            <span style="font-size:2.5rem;">◌</span>
+            <span style="font-size:0.85rem;">No active empires at this year</span>
         </div>
         """, unsafe_allow_html=True)
 
@@ -396,19 +295,6 @@ def render_map_card(label: str, color: str, year_str: str, active: List[Dict], p
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
-    # ── Header ────────────────────────────────────────────────────────────
-    st.markdown("""
-    <div class="app-header">
-        <h1 class="app-title">GeoJSON Comparison — Dual Timeline</h1>
-    </div>
-    <p class="app-subtitle">Use the small control window titled GeoJSON Comparison — Dual Timeline to change years independently for each dataset A, B, and C.</p>
-    <div class="dataset-badges">
-        <span class="badge badge-a"><span class="badge-dot" style="background:#e63946"></span>Dataset A — INDIAN_final</span>
-        <span class="badge badge-b"><span class="badge-dot" style="background:#457b9d"></span>Dataset B — Geojson_FolderB_named</span>
-        <span class="badge badge-c"><span class="badge-dot" style="background:#2d6a4f"></span>Dataset C — Ranjita_and_Ajay</span>
-    </div>
-    """, unsafe_allow_html=True)
-
     # ── Session state init ────────────────────────────────────────────────
     for key, default in [
         ('index_a', []), ('index_b', []), ('index_c', []),
@@ -436,95 +322,82 @@ def main():
             st.session_state.tl_c    = build_timeline(st.session_state.index_c)
             st.session_state.loaded  = True
 
-    # ── Get current state ─────────────────────────────────────────────────
-    datasets_info = [
-        ('index_a', 'tl_a', 'pos_a', LABEL_A, '#e63946', PALETTE_A),
-        ('index_b', 'tl_b', 'pos_b', LABEL_B, '#457b9d', PALETTE_B),
-        ('index_c', 'tl_c', 'pos_c', LABEL_C, '#2d6a4f', PALETTE_C),
-    ]
-
-    active_results = {}
-
-    for idx_key, tl_key, pos_key, label, color, palette in datasets_info:
+    # ── Compute current state ─────────────────────────────────────────────
+    def get_state(idx_key, tl_key, pos_key):
         tl = st.session_state[tl_key]
         pos = st.session_state[pos_key]
         if tl and 0 <= pos < len(tl):
             year = tl[pos]
             active = active_at(st.session_state[idx_key], year)
-        else:
-            year = 0
-            active = []
-        active_results[label] = (year, active, palette, color, len(tl))
+            return year, active, pos + 1, len(tl)
+        return 0, [], 0, 0
 
-    # ── Preview Row: 3 Map Cards ──────────────────────────────────────────
-    st.markdown('<p class="map-section-title">Map Preview</p>', unsafe_allow_html=True)
+    year_a, active_a, step_a, total_a = get_state('index_a', 'tl_a', 'pos_a')
+    year_b, active_b, step_b, total_b = get_state('index_b', 'tl_b', 'pos_b')
+    year_c, active_c, step_c, total_c = get_state('index_c', 'tl_c', 'pos_c')
 
-    preview_col1, preview_col2, preview_col3 = st.columns(3, gap="medium")
+    MAP_H = 340 
 
-    year_a, active_a, pal_a, col_a_color, total_a = active_results[LABEL_A]
-    year_b, active_b, pal_b, col_b_color, total_b = active_results[LABEL_B]
-    year_c, active_c, pal_c, col_c_color, total_c = active_results[LABEL_C]
+    # ── 2×2 Grid ──────────────────────────────────────────────────────────
+    col1, col2 = st.columns(2, gap="large")
 
-    with preview_col1:
-        render_map_card(LABEL_A, col_a_color, year_label(year_a), active_a, pal_a)
+    with col1:
+        render_map_card("A", '#e63946', year_label(year_a), step_a, total_a, len(active_a), active_a, PALETTE_A, MAP_H)
 
-    with preview_col2:
-        render_map_card(LABEL_B, col_b_color, year_label(year_b), active_b, pal_b)
+    with col2:
+        render_map_card("B", '#457b9d', year_label(year_b), step_b, total_b, len(active_b), active_b, PALETTE_B, MAP_H)
+        
+    # Vertical gap between rows
+    st.markdown("<div style='height: 1.5rem;'></div>", unsafe_allow_html=True)
 
-    with preview_col3:
-        render_map_card(LABEL_C, col_c_color, year_label(year_c), active_c, pal_c)
+    col3, col4 = st.columns(2, gap="large")
 
-    # ── Controller Card ───────────────────────────────────────────────────
-    st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
-    st.markdown('<div class="controls-card"><p class="controls-title">Timeline Controller</p>', unsafe_allow_html=True)
+    with col3:
+        render_map_card("C", '#2d6a4f', year_label(year_c), step_c, total_c, len(active_c), active_c, PALETTE_C, MAP_H)
 
-    # Three columns for dataset controls
-    ctrl_col1, ctrl_col2, ctrl_col3 = st.columns(3, gap="medium")
+    with col4:
+        st.markdown('<p class="ctrl-title">GeoJSON Comparison — Dual Timeline</p>', unsafe_allow_html=True)
 
-    datasets_controls = [
-        (ctrl_col1, 'index_a', 'tl_a', 'pos_a', LABEL_A, '#e63946'),
-        (ctrl_col2, 'index_b', 'tl_b', 'pos_b', LABEL_B, '#457b9d'),
-        (ctrl_col3, 'index_c', 'tl_c', 'pos_c', LABEL_C, '#2d6a4f'),
-    ]
+        # Dataset A row
+        st.markdown(f'<div class="ctrl-dataset-label" style="color:#e63946;">Dataset A &nbsp; <span style="color:#111827;">{year_label(year_a)}</span></div><div class="ctrl-step">Step {step_a}/{total_a} · {len(active_a)} empires</div>', unsafe_allow_html=True)
+        ca1, ca2 = st.columns(2)
+        with ca1:
+            if st.button("◀ Prev A", key="prev_a", use_container_width=True):
+                st.session_state['pos_a'] = max(0, st.session_state['pos_a'] - 1)
+                st.rerun()
+        with ca2:
+            if st.button("Next A ▶", key="next_a", use_container_width=True):
+                st.session_state['pos_a'] = min(total_a - 1, st.session_state['pos_a'] + 1)
+                st.rerun()
 
-    for col, idx_key, tl_key, pos_key, label, color in datasets_controls:
-        with col:
-            st.markdown(f"""
-            <div class="dataset-header">
-                <div class="dataset-stripe" style="background:{color}"></div>
-                <span class="dataset-name">{label}</span>
-            </div>
-            """, unsafe_allow_html=True)
+        # Changed border color to a light gray for dividers
+        st.markdown("<hr style='border-color:#e5e7eb; margin: 16px 0;'/>", unsafe_allow_html=True)
 
-            tl = st.session_state[tl_key]
+        # Dataset B row
+        st.markdown(f'<div class="ctrl-dataset-label" style="color:#457b9d;">Dataset B &nbsp; <span style="color:#111827;">{year_label(year_b)}</span></div><div class="ctrl-step">Step {step_b}/{total_b} · {len(active_b)} empires</div>', unsafe_allow_html=True)
+        cb1, cb2 = st.columns(2)
+        with cb1:
+            if st.button("◀ Prev B", key="prev_b", use_container_width=True):
+                st.session_state['pos_b'] = max(0, st.session_state['pos_b'] - 1)
+                st.rerun()
+        with cb2:
+            if st.button("Next B ▶", key="next_b", use_container_width=True):
+                st.session_state['pos_b'] = min(total_b - 1, st.session_state['pos_b'] + 1)
+                st.rerun()
 
-            if tl:
-                pos = st.session_state[pos_key]
-                year = tl[pos] if pos < len(tl) else tl[0]
+        st.markdown("<hr style='border-color:#e5e7eb; margin: 16px 0;'/>", unsafe_allow_html=True)
 
-                # Progress indicator
-                st.markdown(f"""
-                <div class="year-display">
-                    <span class="year-value">Step {pos + 1}/{len(tl)}</span>
-                    <span class="empire-count">{len(active_at(st.session_state[idx_key], year))} active</span>
-                </div>
-                """, unsafe_allow_html=True)
-
-                # Navigation buttons
-                btn_col1, btn_col2 = st.columns(2, gap="small")
-                with btn_col1:
-                    if st.button("◀ Prev", key=f"prev_{pos_key}", use_container_width=True):
-                        st.session_state[pos_key] = max(0, pos - 1)
-                        st.rerun()
-
-                with btn_col2:
-                    if st.button("Next ▶", key=f"next_{pos_key}", use_container_width=True):
-                        st.session_state[pos_key] = min(len(tl) - 1, pos + 1)
-                        st.rerun()
-            else:
-                st.markdown('<p style="color:#6b7280;font-size:0.82rem;">No data loaded</p>', unsafe_allow_html=True)
-
-    st.markdown('</div>', unsafe_allow_html=True)
+        # Dataset C row
+        st.markdown(f'<div class="ctrl-dataset-label" style="color:#2d6a4f;">Dataset C &nbsp; <span style="color:#111827;">{year_label(year_c)}</span></div><div class="ctrl-step">Step {step_c}/{total_c} · {len(active_c)} empires</div>', unsafe_allow_html=True)
+        cc1, cc2 = st.columns(2)
+        with cc1:
+            if st.button("◀ Prev C", key="prev_c", use_container_width=True):
+                st.session_state['pos_c'] = max(0, st.session_state['pos_c'] - 1)
+                st.rerun()
+        with cc2:
+            if st.button("Next C ▶", key="next_c", use_container_width=True):
+                st.session_state['pos_c'] = min(total_c - 1, st.session_state['pos_c'] + 1)
+                st.rerun()
 
 
 if __name__ == '__main__':
