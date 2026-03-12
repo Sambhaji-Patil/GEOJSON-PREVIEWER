@@ -14,10 +14,17 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-# MongoDB Connection Details
-MONGO_URI = os.getenv("MONGO_URI")
-MONGO_DB = os.getenv("MONGO_DB")
-MONGO_COLLECTION = os.getenv("MONGO_COLLECTION")
+try:
+    import streamlit as st
+    # If Streamlit is available, prefer st.secrets (Streamlit Cloud)
+    MONGO_URI = st.secrets.get("MONGO_URI", os.getenv("MONGO_URI"))
+    MONGO_DB = st.secrets.get("MONGO_DB", os.getenv("MONGO_DB"))
+    MONGO_COLLECTION = st.secrets.get("MONGO_COLLECTION", os.getenv("MONGO_COLLECTION"))
+except:
+    # Fallback to environment variables only (non-Streamlit context)
+    MONGO_URI = os.getenv("MONGO_URI")
+    MONGO_DB = os.getenv("MONGO_DB")
+    MONGO_COLLECTION = os.getenv("MONGO_COLLECTION")
 
 
 class MongoDBClient:

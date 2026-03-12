@@ -1,3 +1,4 @@
 DEPLOY.md
 __pycache__
 .env
+.vscode
